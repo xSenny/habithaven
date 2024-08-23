@@ -8,7 +8,7 @@ import {
 } from "@/schemas";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-
+import connectDB from '@/lib/db'
 import { lucia, auth } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { User } from "@/lib/models/user.model";
@@ -21,8 +21,9 @@ import { getUserByEmail } from "@/utils/data/user";
 import { generateCodeVerifier, generateState } from "arctic";
 import { github, google } from "@/lib/oauth";
 import { getPasswordResetTokenByToken } from "@/utils/data/password-reset-token";
-import db from "@/lib/db";
 import { PasswordResetToken } from "@/lib/models/password-reset-token.model";
+import { cache } from "react";
+
 
 export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
   const validateData = SignUpSchema.safeParse(values);
@@ -45,10 +46,6 @@ export const signUp = async (values: z.infer<typeof SignUpSchema>) => {
     password: hashedPassword,
     name,
   });
-  const verificationToken = await generateVerificationToken(email);
-  // send mail
-  await sendVerificationEmail(verificationToken.email, verificationToken.token);
-
   return {
     verifyEmail: "Confirmation email sent!",
   };
@@ -60,29 +57,15 @@ export const signIn = async (values: z.infer<typeof SignInSchema>) => {
     return { error: "Invalid data" };
   }
   const { email, password } = validateData.data;
-
   const existingUser = await User.findOne({
     email,
   });
   if (!existingUser || !existingUser.password || !existingUser.email) {
     return { error: "Invalid credentials" };
   }
-
-  if (!existingUser.emailVerified) {
-    const verificationToken = await generateVerificationToken(
-      existingUser.email
-    );
-
-    await sendVerificationEmail(
-      verificationToken.email,
-      verificationToken.token
-    );
-
-    return { success: "Confirmation email sent!" };
-  }
-
+  
   const isPasswordValid = await bcrypt.compare(
-    validateData.data.password,
+    password,
     existingUser.password
   );
 
@@ -200,6 +183,18 @@ export const resetPassword = async (values: z.infer<typeof ResetSchema>) => {
   return { success: "Reset email sent! Check your inbox!" };
 };
 
+export const getUser = cache(async () => {
+  const { user, session } = await auth();
+
+  if (!session) {
+    return null;
+  }
+
+  const userData = await User.findById(user?.id);
+
+  return JSON.parse(JSON.stringify(userData));
+})
+
 export const newPassword = async (
   values: z.infer<typeof NewPasswordSchema>,
   token: string | null
@@ -252,3 +247,5 @@ export const newPassword = async (
 
   return { success: "Password updated" };
 };
+
+

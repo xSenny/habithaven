@@ -1,12 +1,19 @@
 import { Schema, models, model } from "mongoose";
+import { IQuest } from './quest.model'
 
 export interface IUser extends Document {
   email: string;
   password?: string;
   name: string;
   emailVerified: boolean;
-  profilePictureUrl?: string;
+  trophies: number;
+  coins: number;
   role: "user" | "admin";
+  quests: {
+    quest: IQuest;
+    completed: boolean;
+    expirationDate: Date
+  }[]
 }
 const userSchema = new Schema<IUser>(
   {
@@ -26,15 +33,26 @@ const userSchema = new Schema<IUser>(
       default: false,
       required: true,
     },
-    profilePictureUrl: {
-      type: String,
+    trophies: {
+      type: Number,
+      default: 0,
+    }, 
+    coins: {
+      type: Number,
+      default: 0,
     },
-
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
     },
+    quests: [
+      {
+        quest: { type: Schema.Types.ObjectId, ref: 'Quest' },
+        completed: { type: Boolean, default: false },
+        expirationDate: { type: Date, required: true }
+      }
+    ]
   },
   { timestamps: true }
 );

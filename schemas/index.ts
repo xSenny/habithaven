@@ -35,3 +35,14 @@ export const NewPasswordSchema = z.object({
     message: "Minimum 6 characters required",
   }),
 });
+
+export const NewQuestSchema = z.object({
+  name: z.string().min(2, {
+    message: "Minimum 2 characters required",
+  }),
+  description: z.string().min(2, {
+    message: "The description must have at least 2 characters"
+  }), 
+  reward: z.string().min(1, { message: "Add a reward in XP" }),
+  type: z.enum(['daily', 'weekly', 'monthly'])
+})

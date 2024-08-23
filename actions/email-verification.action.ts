@@ -1,15 +1,16 @@
 "use server";
 import { lucia } from "@/lib/auth";
-import db from "@/lib/db";
 import { EmailVerification } from "@/lib/models/email-verification.model";
 import { User } from "@/lib/models/user.model";
 import { getUserByEmail } from "@/utils/data/user";
 import { getVerificationTokenByToken } from "@/utils/data/verificationToken";
 import { cookies } from "next/headers";
-
+import connectDB from '@/lib/db'
 export const newVerification = async (token: string) => {
   //   get the verification token by the token from db
   const existingToken = await getVerificationTokenByToken(token);
+
+  await connectDB()
 
   //   if the token does not exist, return an error
   if (!existingToken) {

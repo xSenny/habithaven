@@ -40,7 +40,7 @@ export const auth = cache(async () => {
     }
   } catch (error) {}
 
-  return { user, session };
+  return JSON.parse(JSON.stringify({ user, session }));
 });
 
 declare module "lucia" {

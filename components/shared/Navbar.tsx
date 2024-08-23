@@ -1,20 +1,37 @@
+'use client'
 import { auth } from "@/lib/auth";
 import ProfileButton from "../auth/profile-button";
 import { BsChatSquareQuote } from "react-icons/bs";
 import Link from "next/link";
+import { Coins, Trophy } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { getUser } from '@/actions/auth.action'
 
-const Navbar = async () => {
-  const { session } = await auth();
+
+const Navbar = () => {
+
+  
+  const { data, isLoading } = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => await getUser(),
+  });
 
   return (
-    <div className=" w-full h-20 border-b border-primary/20  p-5  ">
-      <div className=" w-full container flex justify-between items-center ">
-        <Link href="/">
-          <BsChatSquareQuote className="size-8 hover:text-primary cursor-pointer transition-colors duration-500 ease-in-out" />
-        </Link>
-        {session && <ProfileButton />}
+    <header className="bg-muted/40 border-b px-8 p-4 ml-64">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Habit Haven</h1>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1">
+            <Coins className="w-5 h-5 text-yellow-500" />
+            <span>{isLoading ? 'loading' : data?.coins}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Trophy className="w-5 h-5 text-purple-500" />
+            <span>{isLoading ? 'loading' : data?.trophies}</span>
+          </div>
+        </div>
       </div>
-    </div>
+    </header>
   );
 };
 
